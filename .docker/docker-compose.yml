@@ -24,15 +24,6 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
-    networks:
-      - terraformresources_default
 
 volumes:
   postgres_data:
-
-networks:
-  default:
-    name: terraformresources_default
-  terraformresources_default:
-    name: terraformresources_default
-    external: true
