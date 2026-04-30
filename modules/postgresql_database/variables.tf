@@ -15,13 +15,13 @@ variable "role_password" {
 }
 
 variable "enable_cdc" {
-  description = "When true, configures the database for Change Data Capture: grants REPLICATION to the service role, creates a publication FOR ALL TABLES and a logical replication slot. Requires the PostgreSQL server to have wal_level=logical. Use table.include.list in your Debezium connector to scope which tables are actually captured."
+  description = "When true, configures the database for Change Data Capture: grants REPLICATION to the service role and creates a publication FOR ALL TABLES. Requires the PostgreSQL server to have wal_level=logical. The replication slot is managed by Debezium, not Terraform."
   type        = bool
   default     = false
 }
 
 variable "replication_slot_name" {
-  description = "Override for the replication slot name. Defaults to <database_name>_slot. Only used when enable_cdc is true."
+  description = "Name for the replication slot. Defaults to <database_name>_slot. This name is passed to the Debezium connector as slot.name — Debezium creates the slot itself. Only used when enable_cdc is true."
   type        = string
   default     = null
 }
@@ -32,13 +32,3 @@ variable "publication_name" {
   default     = null
 }
 
-variable "replication_plugin" {
-  description = "Logical decoding plugin for the replication slot. pgoutput is built into PostgreSQL 10+ and is the default for Debezium. Use wal2json if you need the wal2json extension instead."
-  type        = string
-  default     = "pgoutput"
-
-  validation {
-    condition     = contains(["pgoutput", "wal2json"], var.replication_plugin)
-    error_message = "replication_plugin must be one of: pgoutput, wal2json."
-  }
-}

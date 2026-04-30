@@ -36,13 +36,9 @@ resource "postgresql_publication" "cdc" {
   depends_on = [postgresql_database.db]
 }
 
-resource "postgresql_replication_slot" "cdc" {
-  count  = var.enable_cdc ? 1 : 0
-  name   = local.slot_name
-  plugin = var.replication_plugin
-
-  depends_on = [postgresql_database.db]
-}
+# Note: the replication slot is intentionally NOT created here.
+# Debezium manages the slot lifecycle (creates on start, drops on stop if configured).
+# Terraform only creates the publication and grants the REPLICATION privilege to the role.
 
 output "database_name" {
   description = "Name of the created PostgreSQL database."
@@ -55,8 +51,8 @@ output "role_name" {
 }
 
 output "replication_slot_name" {
-  description = "Name of the CDC replication slot. Null when enable_cdc is false."
-  value       = var.enable_cdc ? postgresql_replication_slot.cdc[0].name : null
+  description = "Name of the replication slot that Debezium will create. Null when enable_cdc is false."
+  value       = var.enable_cdc ? local.slot_name : null
 }
 
 output "publication_name" {
