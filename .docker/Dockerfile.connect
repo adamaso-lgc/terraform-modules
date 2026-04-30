@@ -1,0 +1,18 @@
+FROM debezium/connect:2.7.3.Final
+
+ARG CONFLUENT_AVRO_VERSION=7.7.0
+
+USER root
+
+# Install Confluent Avro Converter into a dedicated plugin directory.
+# The archive zip contains JARs under lib/; extract them flat into the plugin dir.
+RUN mkdir -p /kafka/connect/confluent-avro-converter && \
+    curl -fsSL \
+        "https://api.hub.confluent.io/api/plugins/confluentinc/kafka-connect-avro-converter/versions/${CONFLUENT_AVRO_VERSION}/archive" \
+        -o /tmp/avro-converter.zip && \
+    unzip -j /tmp/avro-converter.zip \
+        "confluentinc-kafka-connect-avro-converter-${CONFLUENT_AVRO_VERSION}/lib/*.jar" \
+        -d /kafka/connect/confluent-avro-converter && \
+    rm /tmp/avro-converter.zip
+
+USER 1001

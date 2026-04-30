@@ -1,17 +1,31 @@
 services:
   redpanda-console:
-    image: redpandadata/console:latest
+    image: redpandadata/console:v2.7.2
     container_name: redpanda_console_local
     ports:
       - "8080:8080"
     environment:
-      KAFKA_BROKERS: redpanda:9092
-      CONNECT_ENABLED: "true"
-      CONNECT_CLUSTERS_0_NAME: local
-      CONNECT_CLUSTERS_0_URL: http://kafka-connect:8083
+      CONFIG_FILEPATH: /etc/redpanda-console/config.yaml
+    volumes:
+      - ./redpanda-console.yaml:/etc/redpanda-console/config.yaml:ro
     depends_on:
       redpanda:
         condition: service_healthy
+      schema-registry:
+        condition: service_healthy
+    networks:
+      - terraformresources_default
+
+  schema-registry:
+    image: quay.io/apicurio/apicurio-registry-mem:2.5.8.Final
+    container_name: apicurio_registry_local
+    ports:
+      - "8181:8080"
+    healthcheck:
+      test: ["CMD-SHELL", "curl -sf http://localhost:8080/health/ready || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
     networks:
       - terraformresources_default
 
@@ -41,7 +55,9 @@ services:
       - terraformresources_default
 
   kafka-connect:
-    image: debezium/connect:2.7.3.Final
+    build:
+      context: .
+      dockerfile: Dockerfile.connect
     container_name: kafka_connect_local
     ports:
       - "8083:8083"
@@ -55,6 +71,8 @@ services:
       redpanda:
         condition: service_healthy
       postgres:
+        condition: service_healthy
+      schema-registry:
         condition: service_healthy
     healthcheck:
       test: ["CMD-SHELL", "curl -sf http://localhost:8083/connectors || exit 1"]
