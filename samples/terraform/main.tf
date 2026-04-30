@@ -2,7 +2,7 @@
 # Creates:  database "orders", role "orders_user"
 
 module "orders_db" {
-  source = "../modules/postgresql_database"
+  source = "../../modules/postgresql_database"
 
   database_name = "orders"
   role_password = var.orders_db_password
@@ -19,7 +19,7 @@ module "orders_db" {
 #   - Locally: use .docker/docker-compose.yml (already configured)
 
 module "inventory_db" {
-  source = "../modules/postgresql_database"
+  source = "../../modules/postgresql_database"
 
   database_name = "inventory"
   role_password = var.inventory_db_password
@@ -31,7 +31,7 @@ module "inventory_db" {
 # With topic_prefix="inventory", table "public.outbox" → "inventory.public.outbox"
 
 module "inventory_cdc_topic" {
-  source = "../modules/kafka_topic"
+  source = "../../modules/kafka_topic"
 
   topic_name = "inventory.public.outbox"
   partitions = 1 # increase in production
@@ -43,7 +43,7 @@ module "inventory_cdc_topic" {
 # (container name locally, RDS endpoint in production).
 
 module "inventory_debezium" {
-  source = "../modules/debezium_connector"
+  source = "../../modules/debezium_connector"
 
   connector_name     = "inventory-cdc"
   pg_host            = var.pg_cdc_host
