@@ -42,3 +42,21 @@ variable "inventory_db_password" {
   type        = string
   sensitive   = true
 }
+
+# ── Kafka ──────────────────────────────────────────────────────────────────
+
+variable "kafka_bootstrap_servers" {
+  description = "Kafka bootstrap server address. Locally: localhost:19092 (external Redpanda listener)."
+  type        = string
+}
+
+variable "kafka_connect_url" {
+  description = "Base URL for the Kafka Connect REST API. Locally: http://localhost:8083."
+  type        = string
+}
+
+variable "pg_cdc_host" {
+  description = "PostgreSQL hostname as seen FROM the Kafka Connect container. Locally: the Postgres container name (postgres_local). In production: the RDS endpoint."
+  type        = string
+}
+

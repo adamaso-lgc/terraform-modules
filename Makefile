@@ -4,6 +4,7 @@ DOCKER_COMPOSE := docker compose -f .docker/docker-compose.yml
 
 ## up           Start the local Postgres container and wait until healthy.
 up:
+	docker network create terraformresources_default 2>/dev/null || true
 	$(DOCKER_COMPOSE) up -d --wait
 
 ## down         Stop and remove the local Postgres container.

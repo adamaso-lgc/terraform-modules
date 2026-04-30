@@ -1,4 +1,69 @@
 services:
+  redpanda-console:
+    image: redpandadata/console:latest
+    container_name: redpanda_console_local
+    ports:
+      - "8080:8080"
+    environment:
+      KAFKA_BROKERS: redpanda:9092
+      CONNECT_ENABLED: "true"
+      CONNECT_CLUSTERS_0_NAME: local
+      CONNECT_CLUSTERS_0_URL: http://kafka-connect:8083
+    depends_on:
+      redpanda:
+        condition: service_healthy
+    networks:
+      - terraformresources_default
+
+  redpanda:
+    image: redpandadata/redpanda:v23.3.14
+    container_name: redpanda_local
+    command:
+      - redpanda
+      - start
+      - --overprovisioned
+      - --smp 1
+      - --memory 512M
+      - --reserve-memory 0M
+      - --node-id 0
+      - --check=false
+      # internal: used by containers (kafka-connect); external: used by Terraform on the host
+      - --kafka-addr internal://0.0.0.0:9092,external://0.0.0.0:19092
+      - --advertise-kafka-addr internal://redpanda:9092,external://localhost:19092
+    ports:
+      - "19092:19092"
+    healthcheck:
+      test: ["CMD-SHELL", "rpk cluster health | grep -E 'Healthy:.+true' || exit 1"]
+      interval: 15s
+      timeout: 10s
+      retries: 10
+    networks:
+      - terraformresources_default
+
+  kafka-connect:
+    image: debezium/connect:2.7.3.Final
+    container_name: kafka_connect_local
+    ports:
+      - "8083:8083"
+    environment:
+      BOOTSTRAP_SERVERS: redpanda:9092
+      GROUP_ID: "1"
+      CONFIG_STORAGE_TOPIC: connect_configs
+      OFFSET_STORAGE_TOPIC: connect_offsets
+      STATUS_STORAGE_TOPIC: connect_statuses
+    depends_on:
+      redpanda:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "curl -sf http://localhost:8083/connectors || exit 1"]
+      interval: 15s
+      timeout: 10s
+      retries: 10
+    networks:
+      - terraformresources_default
+
   postgres:
     image: postgres:16
     container_name: postgres_local
@@ -24,6 +89,15 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+    networks:
+      - terraformresources_default
 
 volumes:
   postgres_data:
+
+networks:
+  default:
+    name: terraformresources_default
+  terraformresources_default:
+    name: terraformresources_default
+    external: true
