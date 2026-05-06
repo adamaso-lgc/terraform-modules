@@ -56,15 +56,14 @@ module "inventory_debezium" {
   table_include_list = ["public.outbox"]
   topic_prefix       = "inventory"
 
-  # Avro serialisation via the Confluent Avro Converter pointed at Apicurio's
-  # Confluent-compatible Schema Registry API (/apis/ccompat/v6).
-  # This produces standard Confluent wire format (0x00 + 4-byte schema ID) so
-  # Redpanda Console and any Confluent-compatible consumer can deserialise it.
+  # Avro serialisation via the Confluent Avro Converter pointed at Confluent
+  # Schema Registry. Produces standard Confluent wire format (0x00 + 4-byte
+  # schema ID) so kafka-ui and any Confluent-compatible consumer can deserialise it.
   override_config = {
     "key.converter"                           = "io.confluent.connect.avro.AvroConverter"
-    "key.converter.schema.registry.url"       = "http://schema-registry:8080/apis/ccompat/v6"
+    "key.converter.schema.registry.url"       = "http://schema-registry:8081"
     "value.converter"                         = "io.confluent.connect.avro.AvroConverter"
-    "value.converter.schema.registry.url"     = "http://schema-registry:8080/apis/ccompat/v6"
+    "value.converter.schema.registry.url"     = "http://schema-registry:8081"
   }
 }
 

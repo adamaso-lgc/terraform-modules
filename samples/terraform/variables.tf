@@ -46,7 +46,7 @@ variable "inventory_db_password" {
 # ── Kafka ──────────────────────────────────────────────────────────────────
 
 variable "kafka_bootstrap_servers" {
-  description = "Kafka bootstrap server address. Locally: localhost:19092 (external Redpanda listener)."
+  description = "Kafka bootstrap server address. Locally: localhost:9092 (external Confluent broker listener)."
   type        = string
 }
 

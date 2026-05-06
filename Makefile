@@ -2,7 +2,7 @@ DOCKER_COMPOSE := docker compose -f .docker/docker-compose.yml
 DB_URL         ?= postgres://inventory_user:inventory_local_secret@localhost:5432/inventory?sslmode=disable
 MIGRATE_PATH   ?= samples/go-outbox/migrations
 
-.PHONY: up down down-v local-apply local-destroy local-reset migrate-up run-outbox help
+.PHONY: up down down-v local-apply local-destroy local-reset migrate-up gen-events run-outbox help
 
 ## up           Start the local Postgres container and wait until healthy.
 up:
@@ -35,6 +35,17 @@ migrate-create:
 ## migrate-up       Apply all pending migrations to the local Postgres database.
 migrate-up:
 	migrate -path $(MIGRATE_PATH) -database "$(DB_URL)" -verbose up
+
+## gen-events   Regenerate Go types from the Avro schema (requires Java avro-tools + avrogen).
+gen-events:
+	java -jar avro-tools.jar idl schema \
+		samples/go-outbox/schemas/inventory_item_created.avdl \
+		samples/go-outbox/schemas/inventory_item_created.avsc
+	avrogen -pkg events \
+		-o samples/go-outbox/internal/events/inventory_item_created.go \
+		-tags "json:snake" -strict-types \
+		samples/go-outbox/schemas/inventory_item_created.avsc
+
 
 ## run-outbox   Run the Go sample to insert an event into inventory.public.outbox.
 run-outbox:

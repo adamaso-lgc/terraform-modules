@@ -11,6 +11,7 @@ import (
 	"github.com/jackc/pgx/v5"
 
 	"go-outbox/internal/db"
+	"go-outbox/internal/events"
 )
 
 func main() {
@@ -25,17 +26,19 @@ func main() {
 
 	queries := db.New(conn)
 
-	payload, err := json.Marshal(map[string]any{
-		"item_id":    "item-001",
-		"name":       "Widget A",
-		"quantity":   100,
-		"created_at": time.Now().UTC().Format(time.RFC3339),
-	})
+	evt := events.InventoryItemCreated{
+		ItemID:    "item-001",
+		Name:      "Widget A",
+		Quantity:  100,
+		CreatedAt: time.Now().UTC().Format(time.RFC3339),
+	}
+
+	payload, err := json.Marshal(evt)
 	if err != nil {
 		log.Fatalf("marshal payload: %v", err)
 	}
 
-	event, err := queries.InsertOutboxEvent(ctx, db.InsertOutboxEventParams{
+	outboxEvent, err := queries.InsertOutboxEvent(ctx, db.InsertOutboxEventParams{
 		EventType: "inventory.item.created",
 		Payload:   payload,
 	})
@@ -43,9 +46,9 @@ func main() {
 		log.Fatalf("insert event: %v", err)
 	}
 
-	b := event.ID.Bytes
+	b := outboxEvent.ID.Bytes
 	id := fmt.Sprintf("%x-%x-%x-%x-%x", b[0:4], b[4:6], b[6:8], b[8:10], b[10:16])
-	fmt.Printf("inserted outbox event id=%s type=%s\n", id, event.EventType)
+	fmt.Printf("inserted outbox event id=%s type=%s\n", id, outboxEvent.EventType)
 }
 
 func buildConnStr() string {

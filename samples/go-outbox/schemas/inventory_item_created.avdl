@@ -1,0 +1,21 @@
+@namespace("com.example.inventory")
+protocol InventoryEvents {
+
+  /**
+   * Event emitted when a new inventory item is created.
+   */
+  record InventoryItemCreated {
+    /** Unique identifier of the inventory item. */
+    string item_id;
+
+    /** Display name of the item. */
+    string name;
+
+    /** Initial stock quantity. */
+    int quantity;
+
+    /** ISO-8601 UTC creation timestamp. */
+    string created_at;
+  }
+
+}
